@@ -1,0 +1,326 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// -------------------------------------------------------------
+// 13 & 14. Double-Entry Accounting Core
+// -------------------------------------------------------------
+
+model Account {
+  id             String        @id @default(cuid())
+  code           String        @unique // e.g. 1001, 1002, 1100, 2001, 4001, 5001
+  name           String        // e.g. Cash in Hand, HBL Main Bank, Accounts Receivable, Diesel Expense
+  type           String        // ASSET, LIABILITY, EQUITY, REVENUE, EXPENSE
+  subType        String?       // CURRENT_ASSET, FIXED_ASSET, CURRENT_LIABILITY, DIRECT_EXPENSE, etc.
+  description    String?
+  balance        Float         @default(0.0)
+  isActive       Boolean       @default(true)
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  journalLines   JournalLine[]
+}
+
+model JournalEntry {
+  id             String        @id @default(cuid())
+  entryNumber    String        @unique // e.g. JV-2026-0001
+  date           DateTime      @default(now())
+  referenceType  String?       // TRIP, FUEL, MAINTENANCE, DAILY_EXPENSE, INVOICE, PAYMENT, ADVANCE
+  referenceId    String?       // ID of associated Trip, FuelLog, MaintenanceLog, etc.
+  narration      String        // Transaction memo
+  status         String        @default("POSTED") // POSTED, DRAFT
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  lines          JournalLine[]
+}
+
+model JournalLine {
+  id             String        @id @default(cuid())
+  journalEntryId String
+  journalEntry   JournalEntry  @relation(fields: [journalEntryId], references: [id], onDelete: Cascade)
+  accountId      String
+  account        Account       @relation(fields: [accountId], references: [id])
+  debit          Float         @default(0.0)
+  credit         Float         @default(0.0)
+  description    String?
+  
+  // Tagging dimensions for multi-dimensional reporting
+  vehicleId      String?
+  vehicle        Vehicle?      @relation(fields: [vehicleId], references: [id])
+  driverId       String?
+  driver         Driver?       @relation(fields: [driverId], references: [id])
+  customerId     String?
+  customer       Customer?     @relation(fields: [customerId], references: [id])
+  vendorId       String?
+  vendor         Vendor?       @relation(fields: [vendorId], references: [id])
+
+  createdAt      DateTime      @default(now())
+}
+
+// -------------------------------------------------------------
+// 2 & 3. Fleet: Vehicles, Drivers & Conductors
+// -------------------------------------------------------------
+
+model Vehicle {
+  id              String           @id @default(cuid())
+  regNumber       String           @unique // e.g. LHR-786
+  vehicleType     String           // Truck, Trailor, Mazda, Flatbed, 10-Wheeler
+  model           String?
+  chassisNumber   String?
+  engineNumber    String?
+  status          String           @default("AVAILABLE") // AVAILABLE, ON_TRIP, UNDER_REPAIR, INACTIVE
+  currentOdometer Float            @default(0.0)
+  assignedDriverId String?
+  assignedDriver  Driver?          @relation("DriverAssignedVehicle", fields: [assignedDriverId], references: [id])
+  
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  trips           Trip[]
+  bookings        Booking[]
+  fuelLogs        FuelLog[]
+  maintenanceLogs MaintenanceLog[]
+  dailyExpenses   DailyExpense[]
+  journalLines    JournalLine[]
+  documents       VehicleDocument[]
+}
+
+model VehicleDocument {
+  id              String   @id @default(cuid())
+  vehicleId       String
+  vehicle         Vehicle  @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+  title           String   // Route Permit, Fitness Certificate, Token Tax, Insurance
+  documentNumber  String?
+  expiryDate      DateTime?
+  fileUrl         String?
+  remarks         String?
+  createdAt       DateTime @default(now())
+}
+
+model Driver {
+  id                 String         @id @default(cuid())
+  name               String         // e.g. Muhammad Ali
+  cnic               String?        @unique
+  phone              String
+  licenseNumber      String?
+  monthlySalary      Float          @default(0.0)
+  dailyAllowanceRate Float          @default(0.0)
+  outstandingAdvance Float          @default(0.0)
+  status             String         @default("ACTIVE") // ACTIVE, ON_LEAVE, INACTIVE
+  
+  assignedVehicles   Vehicle[]      @relation("DriverAssignedVehicle")
+  trips              Trip[]
+  bookings           Booking[]
+  dailyExpenses      DailyExpense[]
+  journalLines       JournalLine[]
+  advances           DriverAdvance[]
+
+  createdAt          DateTime       @default(now())
+  updatedAt          DateTime       @updatedAt
+}
+
+model Conductor {
+  id                 String         @id @default(cuid())
+  name               String
+  phone              String?
+  dailyAllowance     Float          @default(0.0)
+  status             String         @default("ACTIVE")
+  trips              Trip[]
+  createdAt          DateTime       @default(now())
+}
+
+model DriverAdvance {
+  id          String   @id @default(cuid())
+  driverId    String
+  driver      Driver   @relation(fields: [driverId], references: [id], onDelete: Cascade)
+  date        DateTime @default(now())
+  amount      Float
+  paidThrough String   @default("CASH") // CASH, BANK
+  reason      String?
+  status      String   @default("PENDING") // PENDING, RECOVERED, PARTIAL
+  recoveredAmount Float @default(0.0)
+  createdAt   DateTime @default(now())
+}
+
+// -------------------------------------------------------------
+// 7, 8, 9, 10 & 11. Operations: Customers, Vendors, Bookings, Trips
+// -------------------------------------------------------------
+
+model Customer {
+  id           String        @id @default(cuid())
+  name         String        // e.g. ABC Traders
+  companyName  String?
+  phone        String
+  email        String?
+  address      String?
+  creditLimit  Float         @default(0.0)
+  balance      Float         @default(0.0) // Positive = Receivable
+  bookings     Booking[]
+  journalLines JournalLine[]
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+}
+
+model Vendor {
+  id              String           @id @default(cuid())
+  name            String           // e.g. ABC Workshop, PSO Station
+  vendorType      String           // DIESEL_PUMP, WORKSHOP, TYRE_SHOP, SPARE_PARTS, AGENT, LOADING_CONTRACTOR
+  phone           String?
+  address         String?
+  balance         Float            @default(0.0) // Positive = Payable
+  fuelLogs        FuelLog[]
+  maintenanceLogs MaintenanceLog[]
+  tripExpenses    TripExpense[]
+  journalLines    JournalLine[]
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+}
+
+model Booking {
+  id               String       @id @default(cuid())
+  bookingNumber    String       @unique // BK-2026-0001
+  customerId       String
+  customer         Customer     @relation(fields: [customerId], references: [id])
+  bookingDate      DateTime     @default(now())
+  pickupLocation   String
+  destination      String
+  vehicleId        String?
+  vehicle          Vehicle?     @relation(fields: [vehicleId], references: [id])
+  driverId         String?
+  driver           Driver?      @relation(fields: [driverId], references: [id])
+  freightAmount    Float        @default(0.0)
+  advanceReceived  Float        @default(0.0)
+  agentName        String?
+  commissionAmount Float        @default(0.0)
+  biltyNumber      String?      @unique
+  status           String       @default("BOOKED") // BOOKED, CONVERTED_TO_TRIP, CANCELLED
+  trip             Trip?
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+}
+
+model Trip {
+  id               String          @id @default(cuid())
+  tripNumber       String          @unique // TR-2026-0001
+  bookingId        String?         @unique
+  booking          Booking?        @relation(fields: [bookingId], references: [id])
+  vehicleId        String
+  vehicle          Vehicle         @relation(fields: [vehicleId], references: [id])
+  driverId         String
+  driver           Driver          @relation(fields: [driverId], references: [id])
+  conductorId      String?
+  conductor        Conductor?      @relation(fields: [conductorId], references: [id])
+  
+  // Timeline Status: BOOKED -> LOADING -> LOADED -> IN_TRANSIT -> ARRIVED -> UNLOADING -> BILTY_CLEARANCE -> PAYMENT_RECEIVED -> TRIP_CLOSED
+  status           String          @default("BOOKED") 
+  
+  startDate        DateTime        @default(now())
+  endDate          DateTime?
+  startOdometer    Float           @default(0.0)
+  endOdometer      Float?
+  totalKM          Float?
+  
+  // Financial Snapshot
+  freightRevenue   Float           @default(0.0)
+  totalExpenses    Float           @default(0.0)
+  netProfit        Float           @default(0.0)
+
+  timelineEvents   TripTimeline[]
+  expenses         TripExpense[]
+  fuelLogs         FuelLog[]
+  dailyExpenses    DailyExpense[]
+
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+}
+
+model TripTimeline {
+  id          String   @id @default(cuid())
+  tripId      String
+  trip        Trip     @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  status      String   // Status name in sequence
+  timestamp   DateTime @default(now())
+  location    String?
+  remarks     String?
+}
+
+model TripExpense {
+  id            String   @id @default(cuid())
+  tripId        String
+  trip          Trip     @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  category      String   // DIESEL, TOLL, LOADING, UNLOADING, DRIVER, CONDUCTOR, AGENT, OTHER
+  amount        Float    @default(0.0)
+  paidThrough   String   @default("CASH") // CASH, BANK, CREDIT
+  vendorId      String?
+  vendor        Vendor?  @relation(fields: [vendorId], references: [id])
+  receiptNumber String?
+  remarks       String?
+  createdAt     DateTime @default(now())
+}
+
+// -------------------------------------------------------------
+// 4, 5 & 6. Daily Expense, Fuel Management, Repair & Maintenance
+// -------------------------------------------------------------
+
+model DailyExpense {
+  id            String   @id @default(cuid())
+  date          DateTime @default(now())
+  vehicleId     String?
+  vehicle       Vehicle? @relation(fields: [vehicleId], references: [id])
+  driverId      String?
+  driver        Driver?  @relation(fields: [driverId], references: [id])
+  tripId        String?
+  trip          Trip?    @relation(fields: [tripId], references: [id])
+  expenseHead   String   // Dinner, Tea, Police, Toll, Miscellaneous
+  subHead       String?
+  amount        Float    @default(0.0)
+  paidFrom      String   @default("CASH") // CASH, BANK
+  location      String?
+  receiptNumber String?
+  remarks       String?
+  createdAt     DateTime @default(now())
+}
+
+model FuelLog {
+  id                 String   @id @default(cuid())
+  vehicleId          String
+  vehicle            Vehicle  @relation(fields: [vehicleId], references: [id])
+  tripId             String?
+  trip               Trip?    @relation(fields: [tripId], references: [id])
+  date               DateTime @default(now())
+  location           String
+  litres             Float
+  rate               Float
+  total              Float
+  odometer           Float
+  fuelStationVendorId String?
+  fuelStation        Vendor?  @relation(fields: [fuelStationVendorId], references: [id])
+  paymentMethod      String   @default("CASH") // CASH, BANK, CREDIT
+  
+  // Computed Fleet Metrics
+  kmPerLitre         Float?   // delta KM / litres
+  fuelCostPerKM      Float?   // total / delta KM
+  
+  createdAt          DateTime @default(now())
+}
+
+model MaintenanceLog {
+  id                String   @id @default(cuid())
+  vehicleId         String
+  vehicle           Vehicle  @relation(fields: [vehicleId], references: [id])
+  date              DateTime @default(now())
+  workshopVendorId  String?
+  workshop          Vendor?  @relation(fields: [workshopVendorId], references: [id])
+  category          String   // ENGINE, TYRES, BRAKES, SUSPENSION, ELECTRICAL, OIL_FILTER, BODY, OTHER
+  description       String
+  partsCost         Float    @default(0.0)
+  labourCost        Float    @default(0.0)
+  totalCost         Float    @default(0.0)
+  odometer          Float?
+  paymentMethod     String   @default("CASH") // CASH, BANK, CREDIT
+  createdAt         DateTime @default(now())
+}
