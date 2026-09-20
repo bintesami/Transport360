@@ -154,13 +154,15 @@ export default function Sidebar({ isOpenMobile, onCloseMobile }: SidebarProps) {
       {isOpenMobile && (
         <div
           onClick={onCloseMobile}
-          className="fixed inset-0 bg-slate-950/60 backdrop-blur-xs z-40 md:hidden"
+          className="fixed inset-0 bg-slate-950/70 backdrop-blur-xs z-40 md:hidden"
         />
       )}
 
       <aside
-        className={`w-72 bg-slate-900 text-slate-100 flex flex-col h-screen fixed md:sticky top-0 z-50 border-r border-slate-800 shadow-2xl transition-transform duration-300 ${
-          isOpenMobile ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
+        className={`w-72 bg-slate-900 text-slate-100 flex-col h-screen fixed md:sticky top-0 z-50 border-r border-slate-800 shadow-2xl transition-all duration-200 ${
+          isOpenMobile
+            ? 'flex start-0 inset-y-0'
+            : 'hidden md:flex'
         }`}
       >
         {/* Brand Header */}

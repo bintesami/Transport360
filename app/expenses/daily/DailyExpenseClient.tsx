@@ -172,7 +172,7 @@ export default function DailyExpenseClient({
             {/* Amount Field (BIG & BOLD FOR MOBILE TOUCH) */}
             <div>
               <label className="block text-slate-800 font-extrabold mb-1 text-sm md:text-base">
-                {isUrdu ? 'رقم درج کریں (Amount PKR):' : 'Amount (PKR):'}
+                {isUrdu ? 'خرچ کی رقم:' : 'Expense Amount:'}
               </label>
               <div className="relative">
                 <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-rose-600 font-extrabold text-base">
@@ -184,7 +184,8 @@ export default function DailyExpenseClient({
                   placeholder="500"
                   value={formData.amount}
                   onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
-                  className="w-full pl-12 pr-4 h-13 bg-rose-50/40 border-2 border-rose-300 rounded-xl text-xl font-black text-rose-700 focus:bg-white focus:border-rose-600 focus:ring-2 focus:ring-rose-200 outline-none transition-all"
+                  className="w-full pl-12 pr-4 h-13 bg-rose-50/40 border-2 border-rose-300 rounded-xl text-xl font-black text-rose-700 focus:bg-white focus:border-rose-600 focus:ring-2 focus:ring-rose-200 outline-none transition-all font-mono"
+                  dir="ltr"
                   required
                 />
               </div>
@@ -196,7 +197,7 @@ export default function DailyExpenseClient({
                     key={amt}
                     type="button"
                     onClick={() => setFormData({ ...formData, amount: amt.toString() })}
-                    className="px-2.5 py-1 text-xs font-bold rounded-lg bg-slate-100 hover:bg-rose-100 text-slate-700 hover:text-rose-700 border border-slate-200 transition-colors whitespace-nowrap"
+                    className="px-3 py-1.5 text-xs font-black rounded-lg bg-slate-100 hover:bg-rose-100 text-slate-700 hover:text-rose-700 border border-slate-200 transition-colors whitespace-nowrap active:scale-95"
                   >
                     +{amt.toLocaleString()}
                   </button>
@@ -207,7 +208,7 @@ export default function DailyExpenseClient({
             {/* Expense Head */}
             <div>
               <label className="block text-slate-700 font-bold mb-1">
-                {isUrdu ? 'خرچ کی مد (Expense Head):' : 'Expense Category:'}
+                {isUrdu ? 'خرچ کی مد:' : 'Expense Category:'}
               </label>
               <select
                 value={formData.expenseHead}
@@ -226,7 +227,7 @@ export default function DailyExpenseClient({
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label className="block text-slate-700 font-bold mb-1">
-                  {isUrdu ? 'گاڑی (Vehicle):' : 'Vehicle:'}
+                  {isUrdu ? 'گاڑی نمبر:' : 'Vehicle:'}
                 </label>
                 <select
                   value={formData.vehicleId}
@@ -244,7 +245,7 @@ export default function DailyExpenseClient({
 
               <div>
                 <label className="block text-slate-700 font-bold mb-1">
-                  {isUrdu ? 'ڈرائیور (Driver):' : 'Driver:'}
+                  {isUrdu ? 'ڈرائیور کا نام:' : 'Driver:'}
                 </label>
                 <select
                   value={formData.driverId}
@@ -265,7 +266,7 @@ export default function DailyExpenseClient({
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label className="block text-slate-700 font-bold mb-1">
-                  {isUrdu ? 'تاریخ (Date):' : 'Date:'}
+                  {isUrdu ? 'تاریخ:' : 'Date:'}
                 </label>
                 <input
                   type="date"
@@ -278,7 +279,7 @@ export default function DailyExpenseClient({
 
               <div>
                 <label className="block text-slate-700 font-bold mb-1">
-                  {isUrdu ? 'ادائیگی کا ذریعہ:' : 'Paid From:'}
+                  {isUrdu ? 'ادائیگی بذریعہ:' : 'Paid From:'}
                 </label>
                 <select
                   value={formData.paidFrom}
@@ -295,11 +296,11 @@ export default function DailyExpenseClient({
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label className="block text-slate-700 font-bold mb-1">
-                  {isUrdu ? 'مقام / اسٹیشن:' : 'Location:'}
+                  {isUrdu ? 'مقام یا اسٹیشن:' : 'Location:'}
                 </label>
                 <input
                   type="text"
-                  placeholder="e.g. Lahore / Sukkur"
+                  placeholder={isUrdu ? 'مثلاً لاہور / سکھر' : 'e.g. Lahore / Sukkur'}
                   value={formData.location}
                   onChange={(e) => setFormData({ ...formData, location: e.target.value })}
                   className="w-full h-11 px-3 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:bg-white"
@@ -323,15 +324,16 @@ export default function DailyExpenseClient({
             {/* Remarks */}
             <div>
               <label className="block text-slate-700 font-bold mb-1">
-                {isUrdu ? 'تفصیل (Remarks):' : 'Remarks:'}
+                {isUrdu ? 'تفصیل و ریمارکس:' : 'Remarks:'}
               </label>
               <textarea
-                placeholder={isUrdu ? 'ڈرائیور کا کھانا یا دیگر تفصیل' : 'Dinner for Driver & Conductor enroute'}
+                placeholder={isUrdu ? 'ڈرائیور کا کھانا یا دیگر متفرق خرچ کی تفصیل...' : 'Dinner for Driver & Conductor enroute...'}
                 value={formData.remarks}
                 onChange={(e) => setFormData({ ...formData, remarks: e.target.value })}
                 className="w-full p-3 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:bg-white h-20"
               />
             </div>
+
 
             {/* Live Accounting Entry Preview */}
             <div className="p-3.5 bg-slate-950 text-white rounded-xl space-y-1.5 font-mono text-xs shadow-inner">
