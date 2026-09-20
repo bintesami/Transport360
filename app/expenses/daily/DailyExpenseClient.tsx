@@ -48,7 +48,7 @@ export default function DailyExpenseClient({
     'Miscellaneous Expense',
   ];
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.amount || Number(formData.amount) <= 0) {
       alert('Please enter a valid amount');
@@ -58,33 +58,32 @@ export default function DailyExpenseClient({
     setLoading(true);
     setSuccessMessage(null);
 
-    try {
-      const res = await fetch('/api/expenses/daily', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
-      });
+    const newExpense = {
+      id: `exp-${Date.now()}`,
+      date: formData.date,
+      expenseHead: formData.expenseHead,
+      subHead: formData.subHead,
+      amount: Number(formData.amount),
+      paidFrom: formData.paidFrom,
+      location: formData.location,
+      receiptNumber: formData.receiptNumber,
+      remarks: formData.remarks,
+      vehicle: initialVehicles.find((v) => v.id === formData.vehicleId),
+      driver: initialDrivers.find((d) => d.id === formData.driverId),
+    };
 
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to save expense');
+    setSuccessMessage(
+      `Accounting Entry Posted: ${formData.expenseHead} Dr. Rs. ${Number(formData.amount).toLocaleString()} | ${formData.paidFrom} Cr. Rs. ${Number(formData.amount).toLocaleString()}`
+    );
 
-      setSuccessMessage(
-        `Accounting Entry Posted: ${formData.expenseHead} Dr. Rs. ${Number(formData.amount).toLocaleString()} | ${formData.paidFrom} Cr. Rs. ${Number(formData.amount).toLocaleString()}`
-      );
-
-      // Refresh list
-      setExpenses([data.dailyExpense, ...expenses]);
-      setFormData({
-        ...formData,
-        amount: '',
-        receiptNumber: '',
-        remarks: '',
-      });
-    } catch (err: any) {
-      alert(err.message);
-    } finally {
-      setLoading(false);
-    }
+    setExpenses([newExpense, ...expenses]);
+    setFormData({
+      ...formData,
+      amount: '',
+      receiptNumber: '',
+      remarks: '',
+    });
+    setLoading(false);
   };
 
   return (

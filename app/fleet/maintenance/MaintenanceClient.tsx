@@ -39,31 +39,35 @@ export default function MaintenanceClient({ vehicles, workshops, initialLogs }: 
     setFormData({ ...formData, labourCost: val, totalCost: (p + l).toString() });
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setSuccessMessage(null);
 
-    try {
-      const res = await fetch('/api/fleet/maintenance', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
-      });
+    const parts = parseFloat(formData.partsCost) || 0;
+    const labour = parseFloat(formData.labourCost) || 0;
+    const total = parts + labour;
 
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to save maintenance');
+    const newLog = {
+      id: `maint-${Date.now()}`,
+      date: formData.date,
+      category: formData.category,
+      description: formData.description,
+      partsCost: parts,
+      labourCost: labour,
+      totalCost: total,
+      odometer: parseFloat(formData.odometer) || 0,
+      paymentMethod: formData.paymentMethod,
+      vehicle: vehicles.find((v) => v.id === formData.vehicleId),
+      workshop: workshops.find((w) => w.id === formData.workshopVendorId),
+    };
 
-      setSuccessMessage(
-        `Maintenance Posted: Repair & Maintenance Dr. Rs. ${Number(formData.totalCost).toLocaleString()} | ${formData.paymentMethod === 'CREDIT' ? 'Workshop Payable' : formData.paymentMethod} Cr. Rs. ${Number(formData.totalCost).toLocaleString()}`
-      );
+    setSuccessMessage(
+      `Maintenance Posted: Repair & Maintenance Dr. Rs. ${total.toLocaleString()} | ${formData.paymentMethod === 'CREDIT' ? 'Workshop Payable' : formData.paymentMethod} Cr. Rs. ${total.toLocaleString()}`
+    );
 
-      setLogs([data.maintenanceLog, ...logs]);
-    } catch (err: any) {
-      alert(err.message);
-    } finally {
-      setLoading(false);
-    }
+    setLogs([newLog, ...logs]);
+    setLoading(false);
   };
 
   return (

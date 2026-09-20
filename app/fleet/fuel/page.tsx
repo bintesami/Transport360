@@ -2,7 +2,6 @@ import React from 'react';
 import prisma from '@/lib/prisma';
 import FuelClient from './FuelClient';
 
-export const dynamic = 'force-dynamic';
 
 async function getFuelData() {
   const vehicles = await prisma.vehicle.findMany({ select: { id: true, regNumber: true, currentOdometer: true } });

@@ -3,7 +3,6 @@ import Link from 'next/link';
 import prisma from '@/lib/prisma';
 import { Navigation, Truck, Users, Clock, CheckCircle2, ChevronRight, Plus, ArrowUpRight } from 'lucide-react';
 
-export const dynamic = 'force-dynamic';
 
 async function getTrips() {
   return await prisma.trip.findMany({

@@ -3,7 +3,6 @@ import Link from 'next/link';
 import prisma from '@/lib/prisma';
 import { Users, Truck, DollarSign, Wallet, Plus, ArrowUpRight, History } from 'lucide-react';
 
-export const dynamic = 'force-dynamic';
 
 async function getDrivers() {
   return await prisma.driver.findMany({

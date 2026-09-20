@@ -2,7 +2,6 @@ import React from 'react';
 import prisma from '@/lib/prisma';
 import { Wallet, Building2, ArrowDownLeft, ArrowUpRight, DollarSign, Calendar } from 'lucide-react';
 
-export const dynamic = 'force-dynamic';
 
 async function getCashBankData() {
   const cashAccount = await prisma.account.findUnique({

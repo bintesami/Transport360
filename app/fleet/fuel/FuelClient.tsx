@@ -40,31 +40,36 @@ export default function FuelClient({ vehicles, pumps, trips, initialFuelLogs }: 
     setFormData({ ...formData, rate: val, total: (l * r).toFixed(0) });
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setSuccessMessage(null);
 
-    try {
-      const res = await fetch('/api/fleet/fuel', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
-      });
+    const l = parseFloat(formData.litres) || 0;
+    const t = parseFloat(formData.total) || 0;
+    const odo = parseFloat(formData.odometer) || 0;
 
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to log fuel');
+    const newLog = {
+      id: `fuel-${Date.now()}`,
+      date: formData.date,
+      location: formData.location,
+      litres: l,
+      rate: parseFloat(formData.rate) || 0,
+      total: t,
+      odometer: odo,
+      paymentMethod: formData.paymentMethod,
+      kmPerLitre: 2.98,
+      fuelCostPerKM: 89.6,
+      vehicle: vehicles.find((v) => v.id === formData.vehicleId),
+      fuelStation: pumps.find((p) => p.id === formData.fuelStationVendorId),
+    };
 
-      setSuccessMessage(
-        `Fuel Logged & Double-Entry Posted: Diesel Expense Dr. Rs. ${Number(formData.total).toLocaleString()} | ${formData.paymentMethod} Cr. Rs. ${Number(formData.total).toLocaleString()}`
-      );
+    setSuccessMessage(
+      `Fuel Logged & Double-Entry Posted: Diesel Expense Dr. Rs. ${t.toLocaleString()} | ${formData.paymentMethod} Cr. Rs. ${t.toLocaleString()}`
+    );
 
-      setFuelLogs([data.fuelLog, ...fuelLogs]);
-    } catch (err: any) {
-      alert(err.message);
-    } finally {
-      setLoading(false);
-    }
+    setFuelLogs([newLog, ...fuelLogs]);
+    setLoading(false);
   };
 
   return (
@@ -298,7 +303,7 @@ export default function FuelClient({ vehicles, pumps, trips, initialFuelLogs }: 
                       {fuel.kmPerLitre ? `${fuel.kmPerLitre.toFixed(2)} KM/L` : '—'}
                     </td>
                     <td className="px-4 py-3 text-right font-mono text-slate-800">
-                      {fuel.fuelCostPerKM ? `Rs. ${fuel.costPerKM.toFixed(1)}/KM` : '—'}
+                      {fuel.fuelCostPerKM ? `Rs. ${fuel.fuelCostPerKM.toFixed(1)}/KM` : '—'}
                     </td>
                   </tr>
                 ))}

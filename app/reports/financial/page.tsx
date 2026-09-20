@@ -2,7 +2,6 @@ import React from 'react';
 import prisma from '@/lib/prisma';
 import FinancialReportsClient from './FinancialReportsClient';
 
-export const dynamic = 'force-dynamic';
 
 async function getFinancialData() {
   const accounts = await prisma.account.findMany({

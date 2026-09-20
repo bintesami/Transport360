@@ -2,7 +2,6 @@ import React from 'react';
 import prisma from '@/lib/prisma';
 import { Building2, Phone, Mail, MapPin, DollarSign, ArrowUpRight, FileText } from 'lucide-react';
 
-export const dynamic = 'force-dynamic';
 
 async function getCustomers() {
   return await prisma.customer.findMany({

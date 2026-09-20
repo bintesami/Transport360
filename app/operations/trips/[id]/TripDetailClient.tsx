@@ -67,63 +67,57 @@ export default function TripDetailClient({ initialTrip }: TripDetailClientProps)
   const netProfit = trip.freightRevenue - totalExpenses;
   const profitMargin = trip.freightRevenue > 0 ? ((netProfit / trip.freightRevenue) * 100).toFixed(1) : 0;
 
-  const handleAdvanceTimeline = async () => {
+  const handleAdvanceTimeline = () => {
     if (currentStepIndex >= TIMELINE_STEPS.length - 1) return;
     const nextStep = TIMELINE_STEPS[currentStepIndex + 1];
 
-    setAdvanceStepLoading(true);
-    try {
-      const res = await fetch(`/api/operations/trips/${trip.id}/timeline`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: nextStep.id, location: 'Enroute Terminal', remarks: `Moved to ${nextStep.label}` }),
-      });
-
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to advance status');
-
-      setTrip({ ...trip, status: nextStep.id });
-    } catch (err: any) {
-      alert(err.message);
-    } finally {
-      setAdvanceStepLoading(false);
-    }
+    setTrip({
+      ...trip,
+      status: nextStep.id,
+      timelineEvents: [
+        ...trip.timelineEvents,
+        {
+          id: `tl-${Date.now()}`,
+          status: nextStep.id,
+          location: 'Enroute Terminal',
+          remarks: `Moved to ${nextStep.label}`,
+          timestamp: new Date().toISOString(),
+        },
+      ],
+    });
   };
 
-  const handleAddExpense = async (e: React.FormEvent) => {
+  const handleAddExpense = (e: React.FormEvent) => {
     e.preventDefault();
     if (!expenseForm.amount || Number(expenseForm.amount) <= 0) {
       alert('Please enter a valid amount');
       return;
     }
 
-    setLoading(true);
-    try {
-      const res = await fetch(`/api/operations/trips/${trip.id}/expenses`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(expenseForm),
-      });
+    const amt = Number(expenseForm.amount);
+    const newExpense = {
+      id: `exp-${Date.now()}`,
+      category: expenseForm.category,
+      amount: amt,
+      paidThrough: expenseForm.paidThrough,
+      receiptNumber: expenseForm.receiptNumber,
+      remarks: expenseForm.remarks,
+    };
 
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to add expense');
+    setTrip({
+      ...trip,
+      expenses: [newExpense, ...trip.expenses],
+      totalExpenses: trip.totalExpenses + amt,
+      netProfit: trip.freightRevenue - (trip.totalExpenses + amt),
+    });
 
-      setTrip({
-        ...trip,
-        expenses: [data.tripExpense, ...trip.expenses],
-      });
-      setExpenseForm({
-        category: 'DIESEL',
-        amount: '',
-        paidThrough: 'CASH',
-        receiptNumber: '',
-        remarks: '',
-      });
-    } catch (err: any) {
-      alert(err.message);
-    } finally {
-      setLoading(false);
-    }
+    setExpenseForm({
+      category: 'DIESEL',
+      amount: '',
+      paidThrough: 'CASH',
+      receiptNumber: '',
+      remarks: '',
+    });
   };
 
   return (

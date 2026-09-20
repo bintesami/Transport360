@@ -20,7 +20,6 @@ import {
   ChevronRight,
 } from 'lucide-react';
 
-export const dynamic = 'force-dynamic';
 
 async function getDashboardData() {
   try {

@@ -2,7 +2,6 @@ import React from 'react';
 import prisma from '@/lib/prisma';
 import DailyExpenseClient from './DailyExpenseClient';
 
-export const dynamic = 'force-dynamic';
 
 async function getData() {
   const vehicles = await prisma.vehicle.findMany({ select: { id: true, regNumber: true } });

@@ -2,7 +2,6 @@ import React from 'react';
 import prisma from '@/lib/prisma';
 import { BookOpen, CheckCircle2, ShieldCheck, Filter } from 'lucide-react';
 
-export const dynamic = 'force-dynamic';
 
 async function getJournalEntries() {
   return await prisma.journalEntry.findMany({

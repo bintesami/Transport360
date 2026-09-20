@@ -2,7 +2,6 @@ import React from 'react';
 import prisma from '@/lib/prisma';
 import { Layers, CheckCircle2, ShieldCheck, DollarSign } from 'lucide-react';
 
-export const dynamic = 'force-dynamic';
 
 async function getChartOfAccounts() {
   return await prisma.account.findMany({

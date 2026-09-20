@@ -2,7 +2,6 @@ import React from 'react';
 import prisma from '@/lib/prisma';
 import { Truck, TrendingUp, DollarSign, Fuel, Wrench, BarChart2, Award } from 'lucide-react';
 
-export const dynamic = 'force-dynamic';
 
 async function getVehicleProfitabilityReport() {
   const vehicles = await prisma.vehicle.findMany({

@@ -3,7 +3,6 @@ import Link from 'next/link';
 import prisma from '@/lib/prisma';
 import { Truck, Plus, Eye, Fuel, Wrench, Navigation, CheckCircle, Clock } from 'lucide-react';
 
-export const dynamic = 'force-dynamic';
 
 async function getVehicles() {
   return await prisma.vehicle.findMany({

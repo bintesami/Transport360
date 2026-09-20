@@ -35,35 +35,41 @@ export default function BookingsClient({
     biltyNumber: `BL-${Math.floor(100000 + Math.random() * 900000)}`,
   });
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setSuccessMessage(null);
 
-    try {
-      const res = await fetch('/api/operations/bookings', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
-      });
+    const freight = Number(formData.freightAmount) || 0;
+    const advance = Number(formData.advanceReceived) || 0;
 
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to save booking');
+    const newBooking = {
+      id: `bk-${Date.now()}`,
+      bookingNumber: `BK-2026-${Math.floor(1000 + Math.random() * 9000)}`,
+      bookingDate: formData.bookingDate,
+      pickupLocation: formData.pickupLocation,
+      destination: formData.destination,
+      freightAmount: freight,
+      advanceReceived: advance,
+      agentName: formData.agentName,
+      commissionAmount: Number(formData.commissionAmount) || 0,
+      biltyNumber: formData.biltyNumber,
+      status: 'BOOKED',
+      customer: customers.find((c) => c.id === formData.customerId),
+      vehicle: vehicles.find((v) => v.id === formData.vehicleId),
+      driver: drivers.find((d) => d.id === formData.driverId),
+    };
 
-      setSuccessMessage(
-        `Booking & Bilty Created: ${data.booking.bookingNumber} | Customer Receivable Dr. Rs. ${Number(formData.freightAmount).toLocaleString()} / Freight Revenue Cr.`
-      );
+    setSuccessMessage(
+      `Booking & Bilty Created: ${newBooking.bookingNumber} | Customer Receivable Dr. Rs. ${freight.toLocaleString()} / Freight Revenue Cr.`
+    );
 
-      setBookings([data.booking, ...bookings]);
-      setFormData({
-        ...formData,
-        biltyNumber: `BL-${Math.floor(100000 + Math.random() * 900000)}`,
-      });
-    } catch (err: any) {
-      alert(err.message);
-    } finally {
-      setLoading(false);
-    }
+    setBookings([newBooking, ...bookings]);
+    setFormData({
+      ...formData,
+      biltyNumber: `BL-${Math.floor(100000 + Math.random() * 900000)}`,
+    });
+    setLoading(false);
   };
 
   return (

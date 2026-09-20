@@ -2,7 +2,6 @@ import React from 'react';
 import prisma from '@/lib/prisma';
 import MaintenanceClient from './MaintenanceClient';
 
-export const dynamic = 'force-dynamic';
 
 async function getMaintenanceData() {
   const vehicles = await prisma.vehicle.findMany({ select: { id: true, regNumber: true, currentOdometer: true } });

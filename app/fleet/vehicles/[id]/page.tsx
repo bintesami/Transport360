@@ -19,7 +19,10 @@ import {
 } from 'lucide-react';
 import VehicleDetailClient from './VehicleDetailClient';
 
-export const dynamic = 'force-dynamic';
+export async function generateStaticParams() {
+  const vehicles = await prisma.vehicle.findMany({ select: { id: true } });
+  return vehicles.map((v) => ({ id: v.id }));
+}
 
 async function getVehicleData(id: string) {
   return await prisma.vehicle.findUnique({

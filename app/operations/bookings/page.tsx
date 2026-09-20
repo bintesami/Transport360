@@ -2,7 +2,6 @@ import React from 'react';
 import prisma from '@/lib/prisma';
 import BookingsClient from './BookingsClient';
 
-export const dynamic = 'force-dynamic';
 
 async function getBookingsData() {
   const customers = await prisma.customer.findMany({ select: { id: true, name: true, companyName: true } });

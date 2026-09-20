@@ -2,7 +2,6 @@ import React from 'react';
 import prisma from '@/lib/prisma';
 import { Building2, Phone, MapPin, Wrench, Fuel, Disc, DollarSign } from 'lucide-react';
 
-export const dynamic = 'force-dynamic';
 
 async function getVendors() {
   return await prisma.vendor.findMany({

@@ -3,7 +3,10 @@ import { notFound } from 'next/navigation';
 import prisma from '@/lib/prisma';
 import TripDetailClient from './TripDetailClient';
 
-export const dynamic = 'force-dynamic';
+export async function generateStaticParams() {
+  const trips = await prisma.trip.findMany({ select: { id: true } });
+  return trips.map((t) => ({ id: t.id }));
+}
 
 async function getTripData(id: string) {
   return await prisma.trip.findUnique({
