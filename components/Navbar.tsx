@@ -1,17 +1,17 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import {
   PlusCircle,
   Fuel,
   Wrench,
   Search,
-  Bell,
   Calendar,
   Languages,
   Menu,
   Plus,
+  Clock,
 } from 'lucide-react';
 import { useLanguage } from '@/lib/LanguageContext';
 
@@ -21,95 +21,116 @@ interface NavbarProps {
 
 export default function Navbar({ onToggleMobileSidebar }: NavbarProps) {
   const { language, setLanguage, t, isUrdu } = useLanguage();
+  const [time, setTime] = useState<string>('');
+  const [dateStr, setDateStr] = useState<string>('');
 
-  const currentDate = new Date().toLocaleDateString(isUrdu ? 'ur-PK' : 'en-PK', {
-    weekday: 'short',
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-  });
+  useEffect(() => {
+    const updateTime = () => {
+      const now = new Date();
+      // Format Live Time (HH:MM:SS AM/PM)
+      setTime(
+        now.toLocaleTimeString(isUrdu ? 'ur-PK' : 'en-US', {
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit',
+          hour12: true,
+        })
+      );
+      // Format Date
+      setDateStr(
+        now.toLocaleDateString(isUrdu ? 'ur-PK' : 'en-PK', {
+          weekday: 'short',
+          day: 'numeric',
+          month: 'short',
+          year: 'numeric',
+        })
+      );
+    };
+
+    updateTime();
+    const interval = setInterval(updateTime, 1000);
+    return () => clearInterval(interval);
+  }, [isUrdu]);
 
   return (
-    <header className="h-16 bg-white border-b border-slate-200 px-4 md:px-6 flex items-center justify-between sticky top-0 z-20 shadow-xs">
-      {/* Mobile Menu & Search */}
-      <div className="flex items-center gap-3 flex-1 max-w-md">
-        {onToggleMobileSidebar && (
-          <button
-            onClick={onToggleMobileSidebar}
-            className="p-2 text-slate-700 hover:text-sky-600 hover:bg-slate-100 rounded-lg md:hidden transition-colors"
-            title="Toggle Menu"
-          >
-            <Menu className="w-6 h-6" strokeWidth={2.5} />
-          </button>
-        )}
+    <header className="min-h-16 bg-white border-b border-slate-200 px-3 md:px-6 py-2 flex flex-col md:flex-row md:items-center justify-between sticky top-0 z-30 shadow-xs gap-2">
+      {/* Top Row on Mobile: Hamburger, Live Clock (Prominent on Mobile & Laptop), Language Switcher */}
+      <div className="flex items-center justify-between gap-2 w-full md:w-auto">
+        <div className="flex items-center gap-2">
+          {onToggleMobileSidebar && (
+            <button
+              onClick={onToggleMobileSidebar}
+              className="p-2 text-slate-700 hover:text-sky-600 hover:bg-slate-100 rounded-xl md:hidden transition-colors"
+              title="Toggle Menu"
+            >
+              <Menu className="w-6 h-6" strokeWidth={2.5} />
+            </button>
+          )}
 
-        <div className="relative w-full hidden sm:block">
-          <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" strokeWidth={2.5} />
-          <input
-            type="text"
-            placeholder={t('searchPlaceholder')}
-            className="w-full pl-9 pr-4 py-1.5 text-xs md:text-sm font-medium bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500 focus:bg-white transition-all placeholder:text-slate-400"
-          />
+          {/* BRAND TITLE (Mobile visible) */}
+          <Link href="/" className="md:hidden flex items-center gap-1.5 font-black text-slate-900 text-lg">
+            <span>Transport</span><span className="text-sky-600">360</span>
+          </Link>
         </div>
+
+        {/* ⏰ LIVE REAL-TIME CLOCK (PROMINENT ON BOTH MOBILE & LAPTOP) */}
+        <div className="flex items-center gap-2 bg-gradient-to-r from-sky-50 to-indigo-50 border border-sky-200 px-3 py-1.5 rounded-xl shadow-2xs">
+          <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping" />
+          <Clock className="w-4 h-4 text-sky-600" strokeWidth={2.5} />
+          <div className="flex items-center gap-2">
+            <span className="text-xs md:text-sm font-black font-mono text-slate-900 tracking-tight">
+              {time || 'Loading...'}
+            </span>
+            <span className="hidden sm:inline-block text-[11px] font-bold text-slate-500 border-l border-slate-300 pl-2">
+              {dateStr}
+            </span>
+          </div>
+        </div>
+
+        {/* Language Switcher Button */}
+        <button
+          onClick={() => setLanguage(language === 'ur' ? 'en' : 'ur')}
+          className="flex items-center gap-1.5 px-3 py-1.5 text-xs md:text-sm font-extrabold rounded-xl bg-indigo-600 text-white hover:bg-indigo-700 transition-all shadow-sm whitespace-nowrap"
+          title="Switch Language"
+        >
+          <Languages className="w-4 h-4 text-white" strokeWidth={2.5} />
+          <span>{language === 'ur' ? 'English' : 'اردو'}</span>
+        </button>
       </div>
 
-      {/* Quick Action Shortcuts (Scrollable on mobile) */}
-      <div className="flex items-center gap-2 overflow-x-auto py-1 scrollbar-none">
+      {/* Quick Action Shortcuts (Horizontally scrollable and finger-friendly) */}
+      <div className="flex items-center gap-2 overflow-x-auto pb-1 md:pb-0 scrollbar-none w-full md:w-auto justify-start md:justify-end">
         <Link
           href="/expenses/daily"
-          className="flex items-center gap-1.5 px-3 py-1.5 text-xs md:text-sm font-bold rounded-lg bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-100 transition-all whitespace-nowrap shadow-2xs"
+          className="flex items-center gap-1.5 px-3.5 py-2 text-xs md:text-sm font-extrabold rounded-xl bg-rose-600 text-white hover:bg-rose-700 transition-all whitespace-nowrap shadow-sm active:scale-95"
         >
-          <Plus className="w-4 h-4 text-rose-600" strokeWidth={2.5} />
+          <Plus className="w-4 h-4" strokeWidth={2.5} />
           <span>{t('addExpense')}</span>
         </Link>
 
         <Link
           href="/fleet/fuel"
-          className="flex items-center gap-1.5 px-3 py-1.5 text-xs md:text-sm font-bold rounded-lg bg-sky-50 text-sky-700 border border-sky-200 hover:bg-sky-100 transition-all whitespace-nowrap shadow-2xs"
+          className="flex items-center gap-1.5 px-3.5 py-2 text-xs md:text-sm font-extrabold rounded-xl bg-sky-600 text-white hover:bg-sky-700 transition-all whitespace-nowrap shadow-sm active:scale-95"
         >
-          <Fuel className="w-4 h-4 text-sky-600" strokeWidth={2.5} />
+          <Fuel className="w-4 h-4" strokeWidth={2.5} />
           <span>{t('fuelLog')}</span>
         </Link>
 
         <Link
           href="/fleet/maintenance"
-          className="flex items-center gap-1.5 px-3 py-1.5 text-xs md:text-sm font-bold rounded-lg bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100 transition-all whitespace-nowrap shadow-2xs"
+          className="flex items-center gap-1.5 px-3.5 py-2 text-xs md:text-sm font-extrabold rounded-xl bg-amber-600 text-white hover:bg-amber-700 transition-all whitespace-nowrap shadow-sm active:scale-95"
         >
-          <Wrench className="w-4 h-4 text-amber-600" strokeWidth={2.5} />
+          <Wrench className="w-4 h-4" strokeWidth={2.5} />
           <span>{t('repair')}</span>
         </Link>
 
         <Link
           href="/operations/bookings"
-          className="flex items-center gap-1.5 px-3 py-1.5 text-xs md:text-sm font-bold rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 transition-all whitespace-nowrap shadow-2xs"
+          className="flex items-center gap-1.5 px-3.5 py-2 text-xs md:text-sm font-extrabold rounded-xl bg-emerald-600 text-white hover:bg-emerald-700 transition-all whitespace-nowrap shadow-sm active:scale-95"
         >
-          <PlusCircle className="w-4 h-4 text-emerald-600" strokeWidth={2.5} />
+          <PlusCircle className="w-4 h-4" strokeWidth={2.5} />
           <span>{t('newBooking')}</span>
         </Link>
-      </div>
-
-      {/* Language Switcher & Date */}
-      <div className="flex items-center gap-3 pl-2">
-        {/* Language Toggle Button */}
-        <button
-          onClick={() => setLanguage(language === 'ur' ? 'en' : 'ur')}
-          className="flex items-center gap-1.5 px-3 py-1.5 text-xs md:text-sm font-extrabold rounded-lg bg-indigo-50 border border-indigo-200 text-indigo-700 hover:bg-indigo-100 transition-colors shadow-2xs"
-          title="Switch Language"
-        >
-          <Languages className="w-4 h-4 text-indigo-600" strokeWidth={2.5} />
-          <span>{language === 'ur' ? 'English' : 'اردو'}</span>
-        </button>
-
-        <div className="hidden xl:flex items-center gap-2 text-xs md:text-sm font-bold text-slate-700 bg-slate-100 px-3 py-1.5 rounded-lg border border-slate-200">
-          <Calendar className="w-4 h-4 text-slate-600" strokeWidth={2.5} />
-          <span>{currentDate}</span>
-        </div>
-
-        <div className="flex items-center gap-2 pl-2 border-l border-slate-200">
-          <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-sky-600 to-indigo-600 text-white flex items-center justify-center text-xs font-black shadow-md">
-            HQ
-          </div>
-        </div>
       </div>
     </header>
   );

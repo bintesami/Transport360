@@ -40,7 +40,7 @@ module.exports = {
       },
       fontFamily: {
         sans: ['Inter', 'sans-serif'],
-        urdu: ['Noto Nastaliq Urdu', 'Gulzar', 'sans-serif'],
+        urdu: ['"Jameel Noori Nastaleeq"', '"Noto Nastaliq Urdu"', 'Gulzar', 'serif'],
       },
     },
   },
